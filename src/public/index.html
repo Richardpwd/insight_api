@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Contract Insight API</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+
+      <!-- Hero -->
+      <header class="hero">
+        <div class="hero-copy">
+          <span class="eyebrow">Contract Insight API</span>
+          <h1>Analise contratos com seguranca e rapidez.</h1>
+          <p>
+            Envie o texto ou o PDF do contrato e receba em segundos:
+            riscos, campos ausentes, clausulas criticas e um resumo executivo.
+          </p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="#analyzer">Analisar agora</a>
+            <a class="button button-secondary" href="#endpoints">Ver endpoints</a>
+          </div>
+        </div>
+        <section class="hero-card">
+          <span class="card-label">Status</span>
+          <strong>API online</strong>
+          <ul>
+            <li>Autenticacao por API Key</li>
+            <li>Upload de PDF</li>
+            <li>Historico de analises</li>
+            <li>Analise por regras e palavras-chave</li>
+          </ul>
+        </section>
+      </header>
+
+      <main>
+
+        <!-- Analisador -->
+        <section class="section-block analyzer-section" id="analyzer">
+          <div class="section-heading">
+            <span class="card-label">Analisador</span>
+            <h2>Analisar contrato</h2>
+          </div>
+
+          <div class="api-key-bar">
+            <label for="api-key-input">API Key</label>
+            <input
+              type="password"
+              id="api-key-input"
+              placeholder="Sua chave x-api-key (deixe em branco se API_KEY nao estiver configurada)"
+              autocomplete="off"
+            />
+          </div>
+
+          <div class="tabs">
+            <button class="tab-btn active" data-tab="tab-text">Texto</button>
+            <button class="tab-btn" data-tab="tab-pdf">PDF</button>
+          </div>
+
+          <!-- Tab: Texto -->
+          <div id="tab-text" class="tab-pane active">
+            <form id="text-form">
+              <div class="form-group">
+                <label for="contract-text">Texto do contrato</label>
+                <textarea
+                  id="contract-text"
+                  rows="10"
+                  placeholder="Cole aqui o texto completo do contrato (minimo 200 caracteres)..."
+                  required
+                ></textarea>
+              </div>
+              <div class="form-group form-row">
+                <div>
+                  <label for="contract-type-text">Tipo do contrato (opcional)</label>
+                  <select id="contract-type-text">
+                    <option value="">Detectar automaticamente</option>
+                    <option value="prestacao_servico">Prestacao de servico</option>
+                    <option value="locacao">Locacao</option>
+                    <option value="compra_venda">Compra e venda</option>
+                    <option value="confidencialidade">Confidencialidade (NDA)</option>
+                  </select>
+                </div>
+                <button type="submit" class="button button-primary" id="analyze-btn-text">
+                  Analisar contrato
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Tab: PDF -->
+          <div id="tab-pdf" class="tab-pane">
+            <form id="pdf-form">
+              <div class="form-group">
+                <label for="pdf-file">Arquivo PDF</label>
+                <div class="file-drop" id="file-drop">
+                  <span class="file-drop-icon">&#128196;</span>
+                  <span class="file-drop-text">Arraste o PDF aqui ou clique para selecionar</span>
+                  <input type="file" id="pdf-file" accept=".pdf,application/pdf" />
+                </div>
+                <span class="file-name" id="file-name-display"></span>
+              </div>
+              <div class="form-group form-row">
+                <div>
+                  <label for="contract-type-pdf">Tipo do contrato (opcional)</label>
+                  <select id="contract-type-pdf">
+                    <option value="">Detectar automaticamente</option>
+                    <option value="prestacao_servico">Prestacao de servico</option>
+                    <option value="locacao">Locacao</option>
+                    <option value="compra_venda">Compra e venda</option>
+                    <option value="confidencialidade">Confidencialidade (NDA)</option>
+                  </select>
+                </div>
+                <button type="submit" class="button button-primary" id="analyze-btn-pdf">
+                  Analisar PDF
+                </button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <!-- Resultado (oculto ate primeira analise) -->
+        <section class="section-block result-section" id="result-section" hidden></section>
+
+        <!-- Historico (oculto ate primeira analise) -->
+        <section class="section-block" id="history-section" hidden>
+          <div class="section-heading">
+            <span class="card-label">Historico</span>
+            <h2>Analises anteriores</h2>
+          </div>
+          <div class="table-wrap">
+            <table class="history-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Data</th>
+                  <th>Tipo</th>
+                  <th>Origem</th>
+                  <th>Risco</th>
+                </tr>
+              </thead>
+              <tbody id="history-tbody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Endpoints -->
+        <section class="section-block" id="endpoints">
+          <div class="section-heading">
+            <span class="card-label">Endpoints</span>
+            <h2>Uso da API</h2>
+          </div>
+          <div class="endpoint-list">
+            <article class="endpoint-card">
+              <div class="endpoint-topline">
+                <span class="method method-get">GET</span>
+                <strong>/health</strong>
+              </div>
+              <p>Retorna o status da API. Nao requer autenticacao.</p>
+              <pre>{ "status": "ok", "message": "Contract Insight API is running" }</pre>
+            </article>
+            <article class="endpoint-card">
+              <div class="endpoint-topline">
+                <span class="method method-post">POST</span>
+                <strong>/contracts/analyze</strong>
+              </div>
+              <p>Analisa contrato em texto. Requer header <code>x-api-key</code>.</p>
+              <pre>{ "contractText": "...", "contractType": "prestacao_servico" }</pre>
+            </article>
+            <article class="endpoint-card">
+              <div class="endpoint-topline">
+                <span class="method method-post">POST</span>
+                <strong>/contracts/analyze/pdf</strong>
+              </div>
+              <p>Upload de PDF via multipart. Campo <code>file</code> obrigatorio. Requer <code>x-api-key</code>.</p>
+              <pre>Content-Type: multipart/form-data
+file: contrato.pdf
+contractType: prestacao_servico (opcional)</pre>
+            </article>
+            <article class="endpoint-card">
+              <div class="endpoint-topline">
+                <span class="method method-get">GET</span>
+                <strong>/contracts/history</strong>
+              </div>
+              <p>Historico de analises em memoria. Requer <code>x-api-key</code>.</p>
+              <pre>{ "history": [ { "id": 1, "riskScore": 68, ... } ] }</pre>
+            </article>
+          </div>
+        </section>
+
+        <!-- Prontidao empresarial -->
+        <section class="section-block company-readiness">
+          <div class="section-heading">
+            <span class="card-label">Uso empresarial</span>
+            <h2>O que ainda falta para operar com empresas reais</h2>
+          </div>
+          <div class="readiness-grid">
+            <article class="mini-card">
+              <h3>Seguranca</h3>
+              <p>Autenticacao por empresa, RBAC, rate limiting, auditoria e criptografia em repouso.</p>
+            </article>
+            <article class="mini-card">
+              <h3>Persistencia</h3>
+              <p>Banco de dados, historico duravel, versionamento e trilha de alteracoes por contrato.</p>
+            </article>
+            <article class="mini-card">
+              <h3>Documentos reais</h3>
+              <p>OCR para PDFs escaneados, suporte a DOCX, extracao de metadados e assinaturas digitais.</p>
+            </article>
+            <article class="mini-card">
+              <h3>Operacao</h3>
+              <p>Monitoramento, alertas, testes automatizados, ambientes separados e compliance LGPD.</p>
+            </article>
+          </div>
+        </section>
+
+      </main>
+    </div>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
