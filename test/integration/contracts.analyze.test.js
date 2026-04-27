@@ -2,6 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const request = require('supertest');
 const { clearRateLimitBuckets } = require('../../src/middleware/rateLimit');
+const { resetInMemoryStore } = require('../../src/store/history');
 
 process.env.NODE_ENV = 'test';
 process.env.USE_IN_MEMORY_HISTORY = 'true';
@@ -49,6 +50,11 @@ function buildAiResponse() {
   };
 }
 
+test.beforeEach(() => {
+  clearRateLimitBuckets();
+  resetInMemoryStore();
+});
+
 test('POST /contracts/analyze usa IA quando OpenAI responde com sucesso', async () => {
   process.env.OPENAI_API_KEY = 'fake-openai-key';
 
@@ -70,6 +76,60 @@ test('POST /contracts/analyze usa IA quando OpenAI responde com sucesso', async 
     assert.equal(response.body.riskScore, 42);
     assert.equal(response.body.riskLevel, 'medio');
     assert.deepEqual(response.body.suggestions, ['Incluir prazo de vigencia.']);
+  } finally {
+    global.fetch = originalFetch;
+  }
+});
+
+test('GET /contracts/history retorna analises persistidas com contractId', async () => {
+  process.env.OPENAI_API_KEY = 'fake-openai-key';
+
+  const originalFetch = global.fetch;
+  global.fetch = async () => ({
+    ok: true,
+    json: async () => buildAiResponse(),
+  });
+
+  try {
+    await request(app)
+      .post('/contracts/analyze')
+      .set('x-api-key', 'test-key')
+      .send({ contractText: validContractText, contractType: 'prestacao_servico' });
+
+    const historyRes = await request(app).get('/contracts/history').set('x-api-key', 'test-key');
+
+    assert.equal(historyRes.status, 200);
+    assert.equal(Array.isArray(historyRes.body.history), true);
+    assert.equal(historyRes.body.history.length > 0, true);
+    assert.equal(typeof historyRes.body.history[0].contractId, 'number');
+  } finally {
+    global.fetch = originalFetch;
+  }
+});
+
+test('GET /contracts/history/audit retorna trilha de auditoria', async () => {
+  process.env.OPENAI_API_KEY = 'fake-openai-key';
+
+  const originalFetch = global.fetch;
+  global.fetch = async () => ({
+    ok: true,
+    json: async () => buildAiResponse(),
+  });
+
+  try {
+    await request(app)
+      .post('/contracts/analyze')
+      .set('x-api-key', 'test-key')
+      .send({ contractText: validContractText, contractType: 'prestacao_servico' });
+
+    const auditRes = await request(app)
+      .get('/contracts/history/audit')
+      .set('x-api-key', 'test-key');
+
+    assert.equal(auditRes.status, 200);
+    assert.equal(Array.isArray(auditRes.body.audit), true);
+    assert.equal(auditRes.body.audit.length > 0, true);
+    assert.equal(typeof auditRes.body.audit[0].eventType, 'string');
   } finally {
     global.fetch = originalFetch;
   }

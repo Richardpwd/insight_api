@@ -60,6 +60,12 @@ Variaveis adicionais de seguranca:
 
 - `RATE_LIMIT_WINDOW_MS`: janela de rate limit em milissegundos (padrao: 60000)
 - `RATE_LIMIT_MAX_REQUESTS`: maximo de chamadas por janela por `x-api-key` nos endpoints de analise (padrao: 10)
+
+Persistencia em banco:
+
+- A API cria automaticamente as tabelas `contracts`, `analyses` e `audit_logs` na inicializacao.
+- Em producao, use uma `DATABASE_URL` MySQL valida (ex.: Railway MySQL).
+- Em testes locais, `USE_IN_MEMORY_HISTORY=true` habilita fallback em memoria.
 3. Execute o projeto em modo desenvolvimento:
 
 ```bash
@@ -178,6 +184,22 @@ Content-Type: application/json
 
 Se a chamada da OpenAI falhar (timeout, chave invalida, indisponibilidade etc.), a API retorna automaticamente o resultado do motor de regras com `analysisSource: "rules-fallback"`.
 
+### GET /contracts/history
+
+Retorna o historico de analises persistidas com referencia ao contrato (`contractId`).
+
+Query params opcionais:
+
+- `limit`: quantidade maxima de registros (1 a 500, padrao 100)
+
+### GET /contracts/history/audit
+
+Retorna trilha de auditoria das operacoes da API (eventos, status, endpoint, hash da API key, IP e metadata).
+
+Query params opcionais:
+
+- `limit`: quantidade maxima de registros (1 a 500, padrao 100)
+
 ## Testes
 
 Para executar os testes de integracao (IA com sucesso e fallback):
@@ -272,7 +294,6 @@ O arquivo [src/data/sample-contract.json](src/data/sample-contract.json) contem 
 Hoje a API esta pronta para prototipo e validacao funcional. Para uso real em ambiente corporativo, o minimo recomendado e:
 
 - Autenticacao e autorizacao por empresa, usuario e perfil de acesso
-- Persistencia em banco de dados para guardar contratos, analises, auditoria e historico
 - Upload real de arquivos PDF, DOCX e OCR para documentos escaneados
 - Logs estruturados e monitoramento com alertas
 - Rate limiting, protecao contra abuso e hardening de seguranca

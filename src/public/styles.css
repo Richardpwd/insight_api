@@ -239,28 +239,23 @@ pre {
   }
 }
 
+/* ===== MOBILE: até 640px ===== */
 @media (max-width: 640px) {
   .page-shell {
     padding: 16px 12px 40px;
   }
+
 
   .hero-copy,
   .hero-card,
   .section-block,
   .endpoint-card {
     border-radius: 18px;
-  }
-
-  /* Fix cascade: result-section tem padding proprio, forcar aqui */
-  .hero-copy,
-  .hero-card,
-  .section-block,
-  .endpoint-card {
-    padding: 18px !important;
+    padding: 16px !important;
   }
 
   .result-section.section-block {
-    padding: 18px !important;
+    padding: 16px !important;
   }
 
   /* Desabilitar backdrop-filter no mobile por performance */
@@ -272,79 +267,100 @@ pre {
     -webkit-backdrop-filter: none;
   }
 
+
   .hero-actions {
     flex-direction: column;
+    gap: 10px;
   }
 
   .button {
     width: 100%;
     min-height: 52px;
+    font-size: 1.08rem;
+    padding: 0 12px;
+    letter-spacing: 0.01em;
   }
+
 
   .api-key-bar {
     flex-direction: column;
     align-items: stretch;
     gap: 6px;
-    padding: 12px 14px;
+    padding: 10px 10px;
   }
+
 
   .api-key-bar input {
     font-size: 1rem;
-    padding: 4px 0;
+    padding: 6px 0;
   }
+
 
   .tabs {
     flex-wrap: wrap;
+    gap: 4px;
   }
+
 
   .tab-btn {
     flex: 1;
     min-width: 80px;
-    padding: 12px 10px;
+    padding: 10px 6px;
     text-align: center;
-    font-size: 0.88rem;
+    font-size: 0.92rem;
     min-height: 44px;
     touch-action: manipulation;
   }
 
+
   .clause-grid {
     grid-template-columns: 1fr;
+    gap: 10px;
   }
+
 
   pre {
     font-size: 0.8rem;
-    padding: 12px;
-    border-radius: 12px;
+    padding: 10px;
+    border-radius: 10px;
+    word-break: break-word;
   }
+
 
   .section-heading h2 {
-    font-size: 1.4rem;
-    line-height: 1.2;
+    font-size: 1.18rem;
+    line-height: 1.18;
   }
 
+
   .hero h1 {
-    font-size: clamp(1.75rem, 8vw, 2.4rem);
+    font-size: clamp(1.45rem, 7vw, 2.1rem);
     max-width: none;
   }
 
+
   .hero p {
-    font-size: 0.95rem;
+    font-size: 0.98rem;
+    line-height: 1.6;
   }
 
+
   .hero-card {
-    padding: 18px !important;
+    padding: 14px !important;
   }
 
   .hero-card strong {
-    font-size: 1.15rem;
+    font-size: 1.08rem;
   }
+
 
   .section-block {
-    margin-top: 16px;
+    margin-top: 12px;
   }
 
+
   .file-drop {
-    padding: 24px 16px;
+    padding: 18px 8px;
   }
 }
 
@@ -831,6 +847,7 @@ pre {
   }
 }
 
+/* ===== MOBILE: até 480px ===== */
 @media (max-width: 480px) {
   /* Esconder colunas menos importantes na tabela */
   .history-table th:nth-child(4),
@@ -840,24 +857,42 @@ pre {
     display: none;
   }
 
+
   .history-table th,
   .history-table td {
-    padding: 10px 10px;
-    font-size: 0.85rem;
+    padding: 8px 6px;
+    font-size: 0.8rem;
+    word-break: break-word;
   }
+
 
   .score-dial {
-    width: 76px;
-    height: 76px;
+    width: 62px;
+    height: 62px;
   }
+
 
   .score-number {
-    font-size: 1.35rem;
+    font-size: 1.1rem;
   }
 
+
   .exec-summary {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
   }
+/* ===== GERAL: Melhorias extras para mobile ===== */
+@media (max-width: 400px) {
+  .button, .tab-btn {
+    font-size: 0.98rem;
+    padding: 0 6px;
+  }
+  .hero h1 {
+    font-size: 1.1rem;
+  }
+  .section-heading h2 {
+    font-size: 1rem;
+  }
+}
 }
 
 /* --- Camera (tab Foto) --- */

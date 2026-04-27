@@ -8,15 +8,26 @@ const {
   analyzeContractPdf,
   analyzeContractImage,
   getAnalysisHistory,
+  getAnalysisAuditTrail,
 } = require('../controllers/contract.controller');
 
 // Multer configurado para receber PDF em memoria (sem gravar em disco).
-const upload = multer({
+
+// Multer para PDF, DOCX e imagens (upload geral)
+const uploadGeneral = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+  limits: { fileSize: 15 * 1024 * 1024 }, // 15 MB
   fileFilter: (req, file, cb) => {
-    if (file.mimetype !== 'application/pdf') {
-      const err = new Error('Apenas arquivos PDF sao aceitos.');
+    const allowed = new Set([
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/msword',
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+    ]);
+    if (!allowed.has(file.mimetype)) {
+      const err = new Error('Apenas PDF, DOCX ou imagens sao aceitos.');
       err.statusCode = 400;
       return cb(err, false);
     }
@@ -48,6 +59,10 @@ router.use(apiKeyAuth);
 router.post('/analyze', rateLimitByApiKey, analyzeContract);
 router.post('/analyze/pdf', rateLimitByApiKey, upload.single('file'), analyzeContractPdf);
 router.post('/analyze/image', rateLimitByApiKey, uploadImage.single('file'), analyzeContractImage);
+// Nova rota para upload geral (PDF, DOCX, imagens)
+const { analyzeContractUpload } = require('../controllers/contract.controller');
+router.post('/analyze/upload', rateLimitByApiKey, uploadGeneral.single('file'), analyzeContractUpload);
 router.get('/history', getAnalysisHistory);
+router.get('/history/audit', getAnalysisAuditTrail);
 
 module.exports = router;

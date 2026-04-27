@@ -1,8 +1,6 @@
-const {
-  essentialFields,
-  criticalKeywords,
-  riskPatterns,
-} = require('../utils/keywords');
+
+const { essentialFields, criticalKeywords, riskPatterns } = require('../utils/keywords');
+const { contractTypeRules } = require('../utils/contractTypes');
 
 function normalizeText(text) {
   return text
@@ -167,18 +165,27 @@ function buildExecutiveSummary(contractType, riskLevel, missingFields, risks) {
   return `O contrato ${typeLabel} apresenta risco ${riskLevel}, com destaque para ${mainRisk}. Recomenda-se validar as clausulas criticas identificadas antes da formalizacao.`;
 }
 
+
 function analyzeContractText(contractText, contractType) {
   const normalizedText = normalizeText(contractText);
   const detectedContractType = contractType ? contractType.trim() : inferContractType(normalizedText);
 
-  // Primeiro mapeamos os campos essenciais que nao foram encontrados no texto.
-  const missingFields = essentialFields
-    .filter((field) => !containsAny(normalizedText, field.patterns))
-    .map((field) => field.key);
+  // Busca regras específicas para o tipo de contrato, ou fallback para 'nao_informado'
+  const rules = contractTypeRules[detectedContractType] || contractTypeRules['nao_informado'];
 
-  // Depois capturamos clausulas criticas por palavras-chave ou variacoes simples.
+  // Filtra campos essenciais conforme o tipo
+  const missingFields = rules.essentialFields
+    .filter((fieldKey) => {
+      const fieldObj = essentialFields.find((f) => f.key === fieldKey);
+      if (!fieldObj) return true;
+      return !containsAny(normalizedText, fieldObj.patterns);
+    });
+
+  // Filtra cláusulas críticas conforme o tipo
   const criticalClauses = criticalKeywords
     .filter((item) => {
+      if (!rules.criticalClauses.length) return false;
+      if (!rules.criticalClauses.includes(item.type)) return false;
       const patterns = item.keywords || [item.keyword];
       return patterns.some((pattern) => normalizedText.includes(normalizeText(pattern)));
     })
@@ -203,28 +210,22 @@ function analyzeContractText(contractText, contractType) {
     });
   });
 
-  // O score combina ausencias, clausulas criticas e padroes de risco especificos.
+  // Score ajustado conforme regras específicas
   let riskScore = 0;
-
   riskScore += missingFields.length * 8;
   riskScore += criticalClauses.length * 6;
-
   matchedPatterns.forEach((pattern) => {
     riskScore += pattern.score;
   });
-
   if (missingFields.includes('assinatura das partes')) {
     riskScore += 15;
   }
-
   if (missingFields.includes('valor do contrato')) {
     riskScore += 10;
   }
-
   if (missingFields.includes('prazo do contrato')) {
     riskScore += 10;
   }
-
   riskScore = Math.min(riskScore, 100);
 
   const riskLevel = getRiskLevel(riskScore);
