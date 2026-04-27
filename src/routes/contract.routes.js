@@ -1,19 +1,22 @@
+
 const express = require('express');
 const multer = require('multer');
 
-const { apiKeyAuth } = require('../middleware/auth');
-const { createRateLimitByApiKey } = require('../middleware/rateLimit');
-const {
-  analyzeContract,
-  analyzeContractPdf,
-  analyzeContractImage,
-  getAnalysisHistory,
-  getAnalysisAuditTrail,
-} = require('../controllers/contract.controller');
+// Declaração dos uploads ANTES do uso
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+  fileFilter: (req, file, cb) => {
+    const allowed = new Set(['application/pdf']);
+    if (!allowed.has(file.mimetype)) {
+      const err = new Error('Apenas PDF e aceitos para /contracts/analyze/pdf.');
+      err.statusCode = 400;
+      return cb(err, false);
+    }
+    cb(null, true);
+  },
+});
 
-// Multer configurado para receber PDF em memoria (sem gravar em disco).
-
-// Multer para PDF, DOCX e imagens (upload geral)
 const uploadGeneral = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 15 * 1024 * 1024 }, // 15 MB
@@ -35,7 +38,6 @@ const uploadGeneral = multer({
   },
 });
 
-// Multer configurado para receber imagens em memoria.
 const uploadImage = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
@@ -50,6 +52,17 @@ const uploadImage = multer({
   },
 });
 
+const { apiKeyAuth } = require('../middleware/auth');
+const { createRateLimitByApiKey } = require('../middleware/rateLimit');
+const {
+  analyzeContract,
+  analyzeContractPdf,
+  analyzeContractImage,
+  getAnalysisHistory,
+  getAnalysisAuditTrail,
+  analyzeContractUpload,
+} = require('../controllers/contract.controller');
+
 const router = express.Router();
 const rateLimitByApiKey = createRateLimitByApiKey();
 
@@ -59,8 +72,6 @@ router.use(apiKeyAuth);
 router.post('/analyze', rateLimitByApiKey, analyzeContract);
 router.post('/analyze/pdf', rateLimitByApiKey, upload.single('file'), analyzeContractPdf);
 router.post('/analyze/image', rateLimitByApiKey, uploadImage.single('file'), analyzeContractImage);
-// Nova rota para upload geral (PDF, DOCX, imagens)
-const { analyzeContractUpload } = require('../controllers/contract.controller');
 router.post('/analyze/upload', rateLimitByApiKey, uploadGeneral.single('file'), analyzeContractUpload);
 router.get('/history', getAnalysisHistory);
 router.get('/history/audit', getAnalysisAuditTrail);
