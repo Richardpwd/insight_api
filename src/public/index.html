@@ -30,7 +30,7 @@
             <li>Autenticacao por API Key</li>
             <li>Upload de PDF</li>
             <li>Historico de analises</li>
-            <li>Analise por regras e palavras-chave</li>
+            <li>Analise por IA com fallback por regras</li>
           </ul>
         </section>
       </header>
@@ -57,6 +57,7 @@
           <div class="tabs">
             <button class="tab-btn active" data-tab="tab-text">Texto</button>
             <button class="tab-btn" data-tab="tab-pdf">PDF</button>
+            <button class="tab-btn" data-tab="tab-foto">Foto</button>
           </div>
 
           <!-- Tab: Texto -->
@@ -118,6 +119,48 @@
               </div>
             </form>
           </div>
+          <!-- Tab: Foto -->
+          <div id="tab-foto" class="tab-pane">
+            <form id="foto-form">
+              <div class="form-group">
+                <label>Foto do contrato</label>
+                <div class="camera-wrap" id="camera-wrap">
+                  <video id="camera-video" autoplay playsinline muted></video>
+                  <canvas id="camera-canvas" hidden></canvas>
+                  <img id="camera-preview" hidden alt="Foto capturada do contrato" />
+                  <div class="camera-overlay" id="camera-overlay">
+                    <span class="camera-hint">Use a camera para fotografar o contrato</span>
+                    <button type="button" class="button button-primary" id="start-camera-btn">
+                      Abrir camera
+                    </button>
+                  </div>
+                </div>
+                <div class="camera-controls" id="camera-controls" hidden>
+                  <button type="button" class="button button-secondary" id="capture-btn">
+                    &#128247; Tirar foto
+                  </button>
+                  <button type="button" class="button button-secondary" id="retake-btn" hidden>
+                    &#8635; Nova foto
+                  </button>
+                </div>
+              </div>
+              <div class="form-group form-row">
+                <div>
+                  <label for="contract-type-foto">Tipo do contrato (opcional)</label>
+                  <select id="contract-type-foto">
+                    <option value="">Detectar automaticamente</option>
+                    <option value="prestacao_servico">Prestacao de servico</option>
+                    <option value="locacao">Locacao</option>
+                    <option value="compra_venda">Compra e venda</option>
+                    <option value="confidencialidade">Confidencialidade (NDA)</option>
+                  </select>
+                </div>
+                <button type="submit" class="button button-primary" id="analyze-btn-foto" disabled>
+                  Analisar foto
+                </button>
+              </div>
+            </form>
+          </div>
         </section>
 
         <!-- Resultado (oculto ate primeira analise) -->
@@ -137,6 +180,7 @@
                   <th>Data</th>
                   <th>Tipo</th>
                   <th>Origem</th>
+                  <th>Motor</th>
                   <th>Risco</th>
                 </tr>
               </thead>
@@ -165,7 +209,7 @@
                 <span class="method method-post">POST</span>
                 <strong>/contracts/analyze</strong>
               </div>
-              <p>Analisa contrato em texto. Requer header <code>x-api-key</code>.</p>
+              <p>Analisa contrato em texto com IA (OpenAI) e fallback por regras. Requer header <code>x-api-key</code>.</p>
               <pre>{ "contractText": "...", "contractType": "prestacao_servico" }</pre>
             </article>
             <article class="endpoint-card">

@@ -525,6 +525,14 @@ pre {
   margin: 0;
 }
 
+.analysis-source {
+  margin: 12px 0 0;
+  font-size: 0.84rem;
+  color: var(--accent-deep);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
 .result-block {
   margin-bottom: 24px;
 }
@@ -697,4 +705,65 @@ pre {
   .result-type {
     font-size: 1.2rem;
   }
+}
+
+/* --- Camera (tab Foto) --- */
+
+.camera-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #1a1410;
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#camera-video,
+#camera-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+#camera-video[hidden],
+#camera-preview[hidden] {
+  display: none;
+}
+
+.camera-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: rgba(26, 20, 16, 0.72);
+  backdrop-filter: blur(4px);
+}
+
+.camera-overlay[hidden] {
+  display: none;
+}
+
+.camera-hint {
+  color: rgba(255, 250, 244, 0.82);
+  font-size: 0.9rem;
+  text-align: center;
+  max-width: 26ch;
+}
+
+.camera-controls {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.camera-controls[hidden] {
+  display: none;
 }

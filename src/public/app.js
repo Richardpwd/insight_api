@@ -132,7 +132,107 @@ function setLoadingPdf(state) {
   btn.disabled = state;
 }
 
-// --- Renderizacao do resultado ---
+// --- Camera (tab Foto) ---
+
+let cameraStream = null;
+
+const cameraVideo = document.getElementById('camera-video');
+const cameraCanvas = document.getElementById('camera-canvas');
+const cameraPreview = document.getElementById('camera-preview');
+const cameraOverlay = document.getElementById('camera-overlay');
+const cameraControls = document.getElementById('camera-controls');
+const startCameraBtn = document.getElementById('start-camera-btn');
+const captureBtn = document.getElementById('capture-btn');
+const retakeBtn = document.getElementById('retake-btn');
+const analyzeBtnFoto = document.getElementById('analyze-btn-foto');
+
+startCameraBtn.addEventListener('click', async () => {
+  try {
+    cameraStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+    });
+    cameraVideo.srcObject = cameraStream;
+    cameraOverlay.hidden = true;
+    cameraVideo.hidden = false;
+    cameraControls.hidden = false;
+  } catch (err) {
+    showError('Nao foi possivel acessar a camera: ' + err.message);
+  }
+});
+
+captureBtn.addEventListener('click', () => {
+  cameraCanvas.width = cameraVideo.videoWidth;
+  cameraCanvas.height = cameraVideo.videoHeight;
+  cameraCanvas.getContext('2d').drawImage(cameraVideo, 0, 0);
+
+  cameraPreview.src = cameraCanvas.toDataURL('image/jpeg', 0.92);
+  cameraPreview.hidden = false;
+  cameraVideo.hidden = true;
+
+  captureBtn.hidden = true;
+  retakeBtn.hidden = false;
+  analyzeBtnFoto.disabled = false;
+
+  if (cameraStream) {
+    cameraStream.getTracks().forEach((t) => t.stop());
+    cameraStream = null;
+  }
+});
+
+retakeBtn.addEventListener('click', async () => {
+  cameraPreview.hidden = true;
+  retakeBtn.hidden = true;
+  captureBtn.hidden = false;
+  analyzeBtnFoto.disabled = true;
+
+  try {
+    cameraStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+    });
+    cameraVideo.srcObject = cameraStream;
+    cameraVideo.hidden = false;
+  } catch (err) {
+    showError('Nao foi possivel acessar a camera: ' + err.message);
+  }
+});
+
+document.getElementById('foto-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const contractType = document.getElementById('contract-type-foto').value || undefined;
+
+  setLoadingFoto(true);
+  try {
+    const blob = await new Promise((resolve) =>
+      cameraCanvas.toBlob(resolve, 'image/jpeg', 0.92)
+    );
+
+    const formData = new FormData();
+    formData.append('file', blob, 'contrato.jpg');
+    if (contractType) formData.append('contractType', contractType);
+
+    const res = await fetch('/contracts/analyze/image', {
+      method: 'POST',
+      headers: { 'x-api-key': getApiKey() },
+      body: formData,
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Erro ao analisar imagem.');
+    renderResult(data);
+    loadHistory();
+  } catch (err) {
+    showError(err.message);
+  } finally {
+    setLoadingFoto(false);
+  }
+});
+
+function setLoadingFoto(state) {
+  analyzeBtnFoto.textContent = state ? 'Analisando...' : 'Analisar foto';
+  analyzeBtnFoto.disabled = state;
+}
+
+
 
 function riskColor(level) {
   const map = { baixo: '#1f7a5a', medio: '#c97d1a', alto: '#c96f2d', critico: '#9b1c2a' };
@@ -155,20 +255,42 @@ function showError(msg) {
 }
 
 function renderResult(data) {
-  const { summary, missingFields, criticalClauses, risks, recommendations } = data;
-  const color = riskColor(summary.riskLevel);
+  const summaryDetails =
+    data.summaryDetails ||
+    {
+      contractType: data.contractType || 'nao_informado',
+      riskScore: Number(data.riskScore || 0),
+      riskLevel: data.riskLevel || 'medio',
+      executiveSummary: data.summary || '',
+    };
+
+  const missingFields = Array.isArray(data.missingFields) ? data.missingFields : [];
+  const criticalClauses = Array.isArray(data.criticalClauses) ? data.criticalClauses : [];
+  const risks = Array.isArray(data.risks) ? data.risks : [];
+  const suggestions = Array.isArray(data.suggestions)
+    ? data.suggestions
+    : Array.isArray(data.recommendations)
+      ? data.recommendations
+      : [];
+
+  const color = riskColor(summaryDetails.riskLevel);
+  const analysisSource = data.analysisSource || 'rules';
+  const sourceLabel = analysisSource.startsWith('ai')
+    ? `IA (${data.model || 'openai'})`
+    : 'Regras e palavras-chave';
 
   let html = `
     <div class="result-header">
-      <div class="score-dial" style="--pct:${summary.riskScore}%; --dial-color:${color}">
-        <span class="score-number">${summary.riskScore}</span>
+      <div class="score-dial" style="--pct:${summaryDetails.riskScore}%; --dial-color:${color}">
+        <span class="score-number">${summaryDetails.riskScore}</span>
         <span class="score-unit">/ 100</span>
       </div>
       <div class="result-meta">
         <span class="card-label">Resultado da analise</span>
-        <h2 class="result-type">${escapeHtml(summary.contractType)}</h2>
-        <span class="risk-badge" style="--badge-color:${color}">${summary.riskLevel.toUpperCase()}</span>
-        <p class="exec-summary">${escapeHtml(summary.executiveSummary)}</p>
+        <h2 class="result-type">${escapeHtml(summaryDetails.contractType)}</h2>
+        <span class="risk-badge" style="--badge-color:${color}">${summaryDetails.riskLevel.toUpperCase()}</span>
+        <p class="exec-summary">${escapeHtml(summaryDetails.executiveSummary)}</p>
+        <p class="analysis-source">Origem: ${escapeHtml(sourceLabel)}</p>
       </div>
     </div>`;
 
@@ -221,12 +343,12 @@ function renderResult(data) {
     </div>`;
   }
 
-  if (recommendations.length) {
+  if (suggestions.length) {
     html += `
     <div class="result-block">
-      <span class="card-label">Recomendacoes</span>
+      <span class="card-label">Sugestoes</span>
       <ul class="rec-list">
-        ${recommendations.map((r) => `<li>${escapeHtml(r)}</li>`).join('')}
+        ${suggestions.map((r) => `<li>${escapeHtml(r)}</li>`).join('')}
       </ul>
     </div>`;
   }
@@ -264,6 +386,7 @@ function renderHistory(history) {
           <td>${new Date(h.timestamp).toLocaleString('pt-BR')}</td>
           <td>${escapeHtml(h.contractType)}</td>
           <td>${h.source === 'pdf' ? escapeHtml(h.fileName || 'PDF') : 'texto'}</td>
+          <td>${escapeHtml(h.analysisEngine || 'rules')}</td>
           <td><span class="risk-badge-sm" style="--badge-color:${color}">${h.riskLevel} (${h.riskScore})</span></td>
         </tr>`;
     })

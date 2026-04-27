@@ -4,7 +4,7 @@ API em Node.js com Express para analisar contratos em texto, identificar riscos,
 
 ## Objetivo
 
-A Contract Insight API ajuda empresas a fazer uma leitura inicial de contratos de forma automatizada, usando regras simples, palavras-chave e padroes textuais. Toda a analise acontece em memoria, sem banco de dados e sem uso de inteligencia artificial externa.
+A Contract Insight API ajuda empresas a fazer uma leitura inicial de contratos de forma automatizada, usando integracao com OpenAI e fallback por regras simples e palavras-chave quando a IA falha.
 
 ## Tecnologias usadas
 
@@ -13,6 +13,7 @@ A Contract Insight API ajuda empresas a fazer uma leitura inicial de contratos d
 - JavaScript
 - CORS
 - dotenv
+- OpenAI API (via HTTP)
 - Nodemon
 - JSON
 - HTML e CSS para a pagina inicial da API
@@ -51,8 +52,14 @@ npm install
 
 ## Como rodar
 
-1. Copie o arquivo `.env.example` para `.env` se quiser definir uma porta customizada.
-2. Use a porta padrao 3000 ou configure a variavel `PORT`.
+1. Copie o arquivo `.env.example` para `.env`.
+2. Configure `DATABASE_URL`, `API_KEY`, `OPENAI_API_KEY` e opcionalmente `OPENAI_MODEL`.
+3. Use a porta padrao 3000 ou configure a variavel `PORT`.
+
+Variaveis adicionais de seguranca:
+
+- `RATE_LIMIT_WINDOW_MS`: janela de rate limit em milissegundos (padrao: 60000)
+- `RATE_LIMIT_MAX_REQUESTS`: maximo de chamadas por janela por `x-api-key` nos endpoints de analise (padrao: 10)
 3. Execute o projeto em modo desenvolvimento:
 
 ```bash
@@ -110,12 +117,9 @@ Content-Type: application/json
 
 ```json
 {
-  "summary": {
-    "contractType": "prestacao_servico",
-    "riskScore": 68,
-    "riskLevel": "alto",
-    "executiveSummary": "O contrato do tipo prestacao_servico apresenta risco alto, principalmente pela ausencia de valor do contrato e prazo do contrato. Recomenda-se revisao antes da assinatura."
-  },
+  "summary": "Contrato com risco alto por ausencia de prazo definido e responsabilidade pouco clara.",
+  "riskScore": 68,
+  "riskLevel": "alto",
   "missingFields": [
     "valor do contrato",
     "prazo do contrato",
@@ -164,11 +168,22 @@ Content-Type: application/json
       "recommendation": "Avaliar a inclusao de testemunhas para reforcar a formalizacao."
     }
   ],
-  "recommendations": [
+  "suggestions": [
     "Adicionar prazo de vigencia.",
     "Confirmar valor e forma de pagamento."
-  ]
+  ],
+  "analysisSource": "ai-openai"
 }
+```
+
+Se a chamada da OpenAI falhar (timeout, chave invalida, indisponibilidade etc.), a API retorna automaticamente o resultado do motor de regras com `analysisSource: "rules-fallback"`.
+
+## Testes
+
+Para executar os testes de integracao (IA com sucesso e fallback):
+
+```bash
+npm test
 ```
 
 ## Validacoes da entrada
@@ -246,9 +261,9 @@ O arquivo [src/data/sample-contract.json](src/data/sample-contract.json) contem 
 
 ## Possiveis melhorias futuras
 
-- Upload de PDF
-- Integracao com IA
-- Historico de analises
+- OCR para PDF escaneado
+- cache semantico para reduzir custo de IA
+- historico com filtros por nivel de risco
 - Login de empresas
 - Dashboard administrativo
 
