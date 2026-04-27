@@ -1,16 +1,38 @@
-// Armazenamento em memoria para historico de analises.
-// Os dados sao perdidos ao reiniciar o servidor.
-// Para persistencia real, substitua por um banco de dados.
+const pool = require('../db');
 
-const MAX_ENTRIES = 100;
+async function initTable() {
+  await pool.execute(`
+    CREATE TABLE IF NOT EXISTS analyses (
+      id               INT          NOT NULL AUTO_INCREMENT PRIMARY KEY,
+      timestamp        VARCHAR(30)  NOT NULL,
+      contractType     VARCHAR(50)  NOT NULL,
+      riskScore        INT          NOT NULL,
+      riskLevel        VARCHAR(20)  NOT NULL,
+      executiveSummary TEXT         NOT NULL,
+      source           VARCHAR(20)  NOT NULL,
+      fileName         VARCHAR(255)
+    )
+  `);
+}
 
-const history = [];
-let nextId = 1;
+// Cria a tabela na primeira vez que o modulo e carregado.
+initTable().catch((err) => {
+  console.error('Erro ao criar tabela analyses:', err.message);
+  process.exit(1);
+});
 
-function saveAnalysis({ contractType, riskScore, riskLevel, executiveSummary, source, fileName }) {
-  const entry = {
-    id: nextId++,
-    timestamp: new Date().toISOString(),
+async function saveAnalysis({ contractType, riskScore, riskLevel, executiveSummary, source, fileName }) {
+  const timestamp = new Date().toISOString();
+
+  const [result] = await pool.execute(
+    `INSERT INTO analyses (timestamp, contractType, riskScore, riskLevel, executiveSummary, source, fileName)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [timestamp, contractType, riskScore, riskLevel, executiveSummary, source, fileName || null]
+  );
+
+  return {
+    id: result.insertId,
+    timestamp,
     contractType,
     riskScore,
     riskLevel,
@@ -18,20 +40,11 @@ function saveAnalysis({ contractType, riskScore, riskLevel, executiveSummary, so
     source,
     fileName: fileName || null,
   };
-
-  // Insere no inicio para mostrar mais recente primeiro.
-  history.unshift(entry);
-
-  // Limita o tamanho para nao acumular indefinidamente em memoria.
-  if (history.length > MAX_ENTRIES) {
-    history.pop();
-  }
-
-  return entry;
 }
 
-function getHistory() {
-  return history;
+async function getHistory() {
+  const [rows] = await pool.execute('SELECT * FROM analyses ORDER BY id DESC');
+  return rows;
 }
 
 module.exports = { saveAnalysis, getHistory };

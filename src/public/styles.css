@@ -31,17 +31,6 @@ body {
     linear-gradient(180deg, #f8f2e8 0%, #f4eadc 100%);
 }
 
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background-image: linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
-  background-size: 28px 28px;
-  opacity: 0.35;
-}
-
 .page-shell {
   position: relative;
   max-width: 1180px;
@@ -58,10 +47,8 @@ body::before {
 
 .hero-copy,
 .hero-card,
-.info-card,
 .endpoint-card,
-.section-block,
-.mini-card {
+.section-block {
   backdrop-filter: blur(12px);
   background: var(--surface);
   border: 1px solid var(--line);
@@ -84,8 +71,7 @@ body::before {
 }
 
 .hero h1,
-.section-heading h2,
-.info-card h2 {
+.section-heading h2 {
   margin: 0;
   line-height: 1.04;
   font-family: Georgia, "Times New Roman", serif;
@@ -97,9 +83,7 @@ body::before {
 }
 
 .hero p,
-.info-card p,
-.endpoint-card p,
-.mini-card p {
+.endpoint-card p {
   color: var(--muted);
   line-height: 1.7;
 }
@@ -150,36 +134,19 @@ body::before {
   margin-bottom: 18px;
 }
 
-.hero-card ul,
-.feature-list {
+.hero-card ul {
   margin: 0;
   padding-left: 18px;
   color: var(--muted);
 }
 
-.hero-card li,
-.feature-list li {
+.hero-card li {
   margin-bottom: 10px;
 }
 
-.section-grid,
-.readiness-grid,
 .endpoint-list {
   display: grid;
   gap: 20px;
-}
-
-.section-grid {
-  grid-template-columns: 1.2fr 0.8fr;
-  margin-top: 24px;
-}
-
-.info-card {
-  padding: 28px;
-}
-
-.accent-card {
-  background: linear-gradient(135deg, rgba(201, 111, 45, 0.12), rgba(255, 255, 255, 0.82));
 }
 
 .section-block {
@@ -245,26 +212,9 @@ pre {
   font-size: 0.93rem;
 }
 
-.readiness-grid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.mini-card {
-  padding: 22px;
-  background: rgba(255, 255, 255, 0.68);
-}
-
-.mini-card h3 {
-  margin-top: 0;
-  margin-bottom: 10px;
-  font-size: 1.1rem;
-}
-
 @media (max-width: 960px) {
   .hero,
-  .section-grid,
-  .endpoint-list,
-  .readiness-grid {
+  .endpoint-list {
     grid-template-columns: 1fr;
   }
 
@@ -284,19 +234,15 @@ pre {
 
   .hero-copy,
   .hero-card,
-  .info-card,
   .section-block,
-  .endpoint-card,
-  .mini-card {
+  .endpoint-card {
     border-radius: 20px;
   }
 
   .hero-copy,
   .hero-card,
-  .info-card,
   .section-block,
-  .endpoint-card,
-  .mini-card {
+  .endpoint-card {
     padding: 20px;
   }
 

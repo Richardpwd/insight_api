@@ -5,7 +5,7 @@ const { analyzeContractText } = require('../services/contract.service');
 const { saveAnalysis, getHistory } = require('../store/history');
 
 // Analisa contrato enviado como texto JSON.
-function analyzeContract(req, res, next) {
+async function analyzeContract(req, res, next) {
   try {
     const validation = analyzeContractRequest(req.body);
 
@@ -19,7 +19,7 @@ function analyzeContract(req, res, next) {
     const { contractText, contractType } = req.body;
     const analysis = analyzeContractText(contractText, contractType);
 
-    saveAnalysis({
+    await saveAnalysis({
       contractType: analysis.summary.contractType,
       riskScore: analysis.summary.riskScore,
       riskLevel: analysis.summary.riskLevel,
@@ -82,9 +82,14 @@ async function analyzeContractPdf(req, res, next) {
   }
 }
 
-// Retorna o historico de analises armazenado em memoria.
-function getAnalysisHistory(req, res) {
-  res.json({ history: getHistory() });
+// Retorna o historico de analises persistido no banco.
+async function getAnalysisHistory(req, res, next) {
+  try {
+    const history = await getHistory();
+    res.json({ history });
+  } catch (error) {
+    next(error);
+  }
 }
 
 module.exports = {
