@@ -10,7 +10,9 @@ if (useInMemoryHistory) {
 }
 
 if (!process.env.DATABASE_URL) {
-  throw new Error('DATABASE_URL nao definida. Configure a variavel de ambiente antes de iniciar.');
+  console.warn('DATABASE_URL nao definida. Usando armazenamento em memoria.');
+  module.exports = null;
+  return;
 }
 
 const pool = mysql.createPool({
