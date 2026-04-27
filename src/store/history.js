@@ -148,11 +148,17 @@ async function initTable() {
   }
 }
 
+let dbAvailable = false;
+
 // Cria a tabela na primeira vez que o modulo e carregado.
-initTable().catch((err) => {
-  console.error('Erro ao criar tabela analyses:', err.message);
-  process.exit(1);
-});
+initTable()
+  .then(() => {
+    dbAvailable = true;
+  })
+  .catch((err) => {
+    console.error('Erro ao criar tabela analyses:', err.message);
+    dbAvailable = false;
+  });
 
 async function saveAnalysis({
   contractText,
