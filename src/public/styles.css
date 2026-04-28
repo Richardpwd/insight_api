@@ -46,12 +46,13 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 12px 28px rgba(95, 61, 34, 0.12);
-  backdrop-filter: blur(12px);
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(201, 111, 45, 0.16);
+  box-shadow: 0 16px 32px rgba(95, 61, 34, 0.16);
+  backdrop-filter: blur(14px);
 }
 
 .brand-link {
@@ -63,8 +64,8 @@ body {
 }
 
 .brand-logo {
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   object-fit: contain;
 }
 
