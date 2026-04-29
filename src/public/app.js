@@ -152,6 +152,7 @@ startCameraBtn.addEventListener('click', async () => {
       video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
     });
     cameraVideo.srcObject = cameraStream;
+    await cameraVideo.play();
     cameraOverlay.hidden = true;
     cameraVideo.hidden = false;
     cameraControls.hidden = false;
@@ -161,9 +162,19 @@ startCameraBtn.addEventListener('click', async () => {
 });
 
 captureBtn.addEventListener('click', () => {
+  if (!cameraVideo.videoWidth || !cameraVideo.videoHeight) {
+    showError('Aguarde a camera carregar antes de tirar a foto.');
+    return;
+  }
+
   cameraCanvas.width = cameraVideo.videoWidth;
   cameraCanvas.height = cameraVideo.videoHeight;
-  cameraCanvas.getContext('2d').drawImage(cameraVideo, 0, 0);
+  const ctx = cameraCanvas.getContext('2d');
+  if (!ctx) {
+    showError('Nao foi possivel acessar o contexto da camera.');
+    return;
+  }
+  ctx.drawImage(cameraVideo, 0, 0);
 
   cameraPreview.src = cameraCanvas.toDataURL('image/jpeg', 0.92);
   cameraPreview.hidden = false;
@@ -206,6 +217,10 @@ document.getElementById('foto-form').addEventListener('submit', async (e) => {
     const blob = await new Promise((resolve) =>
       cameraCanvas.toBlob(resolve, 'image/jpeg', 0.92)
     );
+
+    if (!blob) {
+      throw new Error('Nao foi possivel gerar a imagem capturada.');
+    }
 
     const formData = new FormData();
     formData.append('file', blob, 'contrato.jpg');
